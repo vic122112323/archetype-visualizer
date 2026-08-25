@@ -1,0 +1,129 @@
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  text-align: left;
+  background: var(--bg-surface-alt);
+  cursor: pointer;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.toggle:hover {
+  background: var(--accent-light);
+}
+
+.toggleTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toggleIcon {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.body {
+  padding: 20px;
+}
+
+.intro {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin-bottom: 20px;
+}
+
+.axesGrid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .axesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .axesGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.axisCard {
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.axisName {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.axisDesc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.levels {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.levelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.levelNum {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 24px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.levelBarTrack {
+  flex: 1;
+  height: 4px;
+  background: var(--border-light);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.levelBarFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  min-width: 2px;
+}
+
+.levelLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  width: 120px;
+  flex-shrink: 0;
+}

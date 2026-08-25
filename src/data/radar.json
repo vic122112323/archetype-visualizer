@@ -1,0 +1,129 @@
+{
+  "axes": [
+    {
+      "id": "working_set",
+      "label": "Working Set",
+      "levels": [
+        { "value": 0,   "label": "Pequeño" },
+        { "value": 50,  "label": "Medio" },
+        { "value": 100, "label": "Grande" }
+      ]
+    },
+    {
+      "id": "cache_impact",
+      "label": "Impacto Jerarquía Caché",
+      "levels": [
+        { "value": 0,   "label": "Cache Friendly" },
+        { "value": 50,  "label": "Moderado" },
+        { "value": 100, "label": "Cache Unfriendly" }
+      ]
+    },
+    {
+      "id": "memory_patterns",
+      "label": "Patrones Acceso Memoria",
+      "levels": [
+        { "value": 0,   "label": "Streaming" },
+        { "value": 25,  "label": "Secuencial" },
+        { "value": 50,  "label": "Bloques" },
+        { "value": 75,  "label": "Aleatorio" },
+        { "value": 100, "label": "Pointer Chasing" }
+      ]
+    },
+    {
+      "id": "parallelism",
+      "label": "Grado Paralelización",
+      "levels": [
+        { "value": 0,   "label": "Inh. Secuencial" },
+        { "value": 25,  "label": "Paralelismo Limitado" },
+        { "value": 50,  "label": "Task Parallel" },
+        { "value": 75,  "label": "Data Parallel" },
+        { "value": 100, "label": "Paralelismo Masivo" }
+      ]
+    },
+    {
+      "id": "compute_intensity",
+      "label": "Intensidad Computacional",
+      "levels": [
+        { "value": 0,   "label": "Baja" },
+        { "value": 50,  "label": "Media" },
+        { "value": 100, "label": "Alta" }
+      ]
+    }
+  ],
+  "archetypes": [
+    {
+      "id": "cpu-intensive",
+      "name": "CPU Intensive",
+      "color": "#c0762a",
+      "values": {
+        "working_set": 0,
+        "cache_impact": 0,
+        "memory_patterns": 0,
+        "parallelism": 75,
+        "compute_intensity": 100
+      }
+    },
+    {
+      "id": "memory-intensive",
+      "name": "Memory Intensive",
+      "color": "#2563a8",
+      "values": {
+        "working_set": 50,
+        "cache_impact": 100,
+        "memory_patterns": 75,
+        "parallelism": 75,
+        "compute_intensity": 0
+      }
+    },
+    {
+      "id": "latency-bound",
+      "name": "Latency Bound",
+      "color": "#6d3fb5",
+      "parentId": "memory-intensive",
+      "values": {
+        "working_set": 50,
+        "cache_impact": 100,
+        "memory_patterns": 75,
+        "parallelism": 25,
+        "compute_intensity": 0
+      }
+    },
+    {
+      "id": "bandwidth-bound",
+      "name": "Bandwidth Bound",
+      "color": "#c0304a",
+      "parentId": "memory-intensive",
+      "values": {
+        "working_set": 0,
+        "cache_impact": 100,
+        "memory_patterns": 50,
+        "parallelism": 75,
+        "compute_intensity": 0
+      }
+    },
+    {
+      "id": "io-bound",
+      "name": "I/O Bound",
+      "color": "#1a7a55",
+      "values": {
+        "working_set": 100,
+        "cache_impact": 50,
+        "memory_patterns": 50,
+        "parallelism": 25,
+        "compute_intensity": 0
+      }
+    },
+    {
+      "id": "large-scale-compute-intensive",
+      "name": "Large-Scale Compute Intensive",
+      "color": "#0e7490",
+      "values": {
+        "working_set": 100,
+        "cache_impact": 40,
+        "memory_patterns": 50,
+        "parallelism": 100,
+        "compute_intensity": 100
+      }
+    }
+  ]
+}

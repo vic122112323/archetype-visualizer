@@ -1,0 +1,560 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "date": "2026-05-29",
+    "title": "Clasificador",
+    "description": "Analisis y descripcion de las categorias y arquetipos de una aplicación.",
+    "total_archetypes": 8,
+    "total_criteria": 6,
+    "idioma": "Español",
+    "sources": [
+      "Williams et al., Modelo Roofline (2009)",
+      "McCalpin, Benchmark STREAM (1995)",
+      "Drepper, Jerarquía de Memoria (2007)",
+      "Beamer et al., Procesamiento de Grafos (2012)",
+      "Herron et al., Análisis de Punteros (2019)",
+      "Blelloch, Algoritmos Paralelos (1990)"
+    ]
+  },
+  "archetypes": [
+    {
+      "id": "cpu-intensive",
+      "name": "CPU Intensive",
+      "shortDescription": "Aplicaciones cuyo rendimiento está limitado por la capacidad de cálculo del procesador.",
+      "characteristics": [
+        "Pasan la mayor parte del tiempo ejecutando operaciones en la CPU",
+        "Tienen poco acceso a memoria o reutilizan muy bien los datos en caché",
+        "Presentan alta localidad espacial y temporal",
+        "Suelen tener alta intensidad aritmética (muchos FLOPs por byte de datos)"
+      ],
+      "criteria": {
+        "accessPattern": "secuencial, por bloques o streaming",
+        "workingSet": "pequeño",
+        "cacheBehavior": "Cache Friendly",
+        "computationalIntensity": "alta",
+        "operationsType": "floating-point",
+        "parallelization": "data-parallel",
+        "limitation": "capacidad de cómputo"
+      },
+      "examples": [
+        {
+          "name": "DGEMM de BLAS",
+          "description": "Función de biblioteca BLAS de álgebra lineal para multiplicar matrices con doble precisión",
+          "justification": "La multiplicación de matrices densas tiene complejidad O(n3) sobre datos de tamaño O(n2). Esto implica una gran cantidad de operaciones por cada acceso a memoria. Además, los algoritmos de nivel 3 de BLAS están diseñados para maximizar la reutilización de bloques en caché, por lo que el tiempo se invierte mayoritariamente en cómputo, no en esperar a la memoria.",
+          "sources": [
+            "Dwarf Berkeley, Dense Linear Algebra",
+            "A Set of Level 3 Basic Linear Algebra Subprograms"
+          ]
+        },
+        {
+          "name": "MATLAB en operaciones algebraicas",
+          "description": "Cálculo matricial, simulación y análisis numérico",
+          "justification": "En operaciones como multiplicación de matrices, resolución de sistemas lineales y factorización, se tiene una complejidad de cálculo mucho superior a la de acceso a datos, además MATLAB utiliza BLAS nivel 3, optimizando la reutilización de datos en caché. La mayoría de tiempo es gastado en cálculos y el rendimiento escala dependiendo de la frecuencia del procesador y el número de núcleos.",
+          "sources": [
+            "Dwarf Berkeley, Dense Linear Algebra",
+            "A Set of Level 3 Basic Linear Algebra Subprograms",
+            "MathWorks – Choosing Hardware for MATLAB"
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "memory-intensive",
+      "name": "Memory Intensive",
+      "shortDescription": "El rendimiento está limitado por la velocidad de acceso y transferencia de datos desde memoria.",
+      "characteristics": [
+        "Manejan grandes volúmenes de datos que no caben en caché",
+        "Presentan baja localidad espacial y temporal",
+        "Generan muchos cache misses y requieren alto ancho de banda",
+        "Tienen baja intensidad aritmética (pocos FLOPs por byte)"
+      ],
+      "criteria": {
+        "accessPattern": "aleatorio",
+        "workingSet": "mediano",
+        "cacheBehavior": "Cache unfriendly",
+        "computationalIntensity": "latency o bandwidth bound",
+        "operationsType": "memoria",
+        "parallelization": "data-parallel",
+        "limitation": "ancho de banda o latencia de memoria"
+      },
+      "examples": [
+        {
+          "name": "SpMV (Sparse Matrix–Vector Multiplication)",
+          "description": "Kernel computacional de multiplicación matriz-vector dispersa",
+          "justification": "El acceso a matrices dispersas suele ser irregular, con índices no contiguos que impiden la reutilización en caché y reduce la localidad espacial y temporal. Esto provoca numerosos fallos de caché y un rendimiento limitado por el ancho de banda de memoria. Además, la operación realiza muy pocos FLOPs por cada acceso.",
+          "sources": [
+            "Efficient Sparse Matrix-Vector Multiplication on CUDA",
+            "Roofline Model",
+            "Dwarf Berkeley, Sparse Linear"
+          ]
+        },
+        {
+          "name": "FFT (Fast Fourier Transform)",
+          "description": "Transformada rápida de Fourier sobre imágenes o señales grandes. Algoritmo que calcula la función matemática DFT que sirve para descomponer una señal en sus frecuencias",
+          "justification": "Su rendimiento está dominado por el movimiento de datos. En transformadas 2D o 3D, los datos procesados exceden la capacidad de caché, obligando a realizar múltiples recorridos sobre grandes matrices. Además, la FFT requiere fases de reordenamiento de datos (como bit-reversal) y patrones de acceso no contiguos, lo que genera baja localidad espacial, muchos cache misses y un uso intensivo del ancho de banda de memoria. La cantidad de operaciones aritméticas por byte transferido es relativamente baja.",
+          "sources": [
+            "FFTW: The Fastest Fourier Transform in the West",
+            "Roofline: An Insightful Visual Performance Model for Floating-Point Programs and Multicore Architectures",
+            "FFTW: AN ADAPTIVE SOFTWARE ARCHITECTURE FOR THE FFT"
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "latency-bound",
+      "name": "Latency Bound",
+      "shortDescription": "El procesador se detiene porque está esperando que lleguen datos de una dirección específica de memoria.",
+      "characteristics": [
+        "El procesador pasa muchos ciclos en estado Idle",
+        "Ocurre principalmente con accesos a memoria no predecibles (punteros aleatorios)",
+        "No se soluciona añadiendo más canales de memoria, sino con cachés más rápidas o mayores frecuencias"
+      ],
+      "criteria": {
+        "accessPattern": "aleatorio",
+        "workingSet": "mediano",
+        "cacheBehavior": "unfriendly",
+        "computationalIntensity": "baja",
+        "operationsType": "integer",
+        "parallelization": "limitada",
+        "limitation": "latencia de memoria"
+      },
+      "examples": [
+        {
+          "name": "Stockfish (aplicación de ajedrez)",
+          "description": "Motor de ajedrez que utiliza una Tabla de Transposición",
+          "justification": "Los motores de ajedrez utilizan una Tabla de Transposición (base de datos grande en RAM) para guardar jugadas ya analizadas. Al evaluar una posición, el motor genera un hash de la mesa y consulta la RAM para ver si ya conoce el resultado. Los saltos en la memoria son aleatorios (cada posición del tablero genera un lugar distinto en la RAM). El procesador pide los datos y se detiene hasta que la RAM responde. Después de recibir esa respuesta, el motor decide cuál es el siguiente movimiento a analizar y realiza otra petición.",
+          "sources": [
+            "Yasin, A. (2014). A Top-Down Method for Strategy-level Microarchitectural Analysis.",
+            "Ferreira, R., et al. Characterizing the Performance of Search Engines and Chess Engines on Modern CPUs."
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "bandwidth-bound",
+      "name": "Bandwidth Bound",
+      "shortDescription": "El sistema está intentando mover la máxima cantidad de datos que el bus de memoria permite.",
+      "characteristics": [
+        "Los accesos suelen ser secuenciales o predecibles (streaming)",
+        "El uso de los canales de memoria está saturado",
+        "Se beneficia de configuraciones Dual-Channel o memoria High Bandwidth Memory"
+      ],
+      "criteria": {
+        "accessPattern": "secuencial",
+        "workingSet": "grande",
+        "cacheBehavior": "streaming",
+        "computationalIntensity": "baja",
+        "operationsType": "memoria",
+        "parallelization": "data-parallel",
+        "limitation": "ancho de banda de memoria"
+      },
+      "examples": [
+        {
+          "name": "SAXPY de BLAS (L1)",
+          "description": "Operación Y[i] = aX[i] + Y[i] en álgebra lineal",
+          "justification": "Para cada índice i se ha de realizar la operación, lo cual para cada tres operaciones de memoria (leer X[i], leer Y[i], escribir Y[i]) solo se realizan dos operaciones aritméticas (una multiplicación y una suma). La CPU termina los cálculos mucho más rápido de lo que la RAM puede conseguir la información. Todo depende de la velocidad de la RAM para coger la información y del bandwidth para que pueda transmitirla.",
+          "sources": [
+            "McCalpin, J. D. (1995). STREAM: Sustainable Memory Bandwidth in High Performance Computers.",
+            "Intel Optimization reference Manual. Section: Memory Bandwidth Characterization."
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "io-bound",
+      "name": "I/O Bound",
+      "shortDescription": "El rendimiento está limitado por las operaciones de entrada/salida (disco, red, etc.).",
+      "characteristics": [
+        "El tiempo dominante es el de lectura/escritura de datos",
+        "El acceso a memoria principal no suele ser el cuello de botella",
+        "La CPU permanece desocupada esperando a que se completen las operaciones de I/O"
+      ],
+      "criteria": {
+        "accessPattern": "secuencial o aleatorio",
+        "workingSet": "grande",
+        "cacheBehavior": "irrelevante",
+        "computationalIntensity": "baja",
+        "operationsType": "io",
+        "parallelization": "limitada por I/O",
+        "limitation": "disco / page faults"
+      },
+      "examples": [
+        {
+          "name": "Wikipedia, interfaces web",
+          "description": "Servicios web y plataformas online",
+          "justification": "Una interfaz web depende principalmente de operaciones de entrada/salida: peticiones HTTP, consultas a bases de datos, carga de recursos estáticos (HTML, CSS, JS, imágenes) y comunicación con servidores remotos. La CPU del cliente y del servidor suele estar sin trabajo mientras espera respuestas de red o disco. El rendimiento está limitado por la latencia de red, el ancho de banda y la velocidad de los sistemas de almacenamiento, no por la capacidad de cálculo del procesador.",
+          "sources": [
+            "The Tail at Scale",
+            "https://www.mediawiki.org/wiki/Architecture info sobre arquitectura de wiki",
+            "Berkeley Dwarf, Graph traversal"
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "large-scale-compute-intensive",
+      "name": "Large-Scale Compute Intensive",
+      "shortDescription": "Aplicaciones cuyo rendimiento está limitado por la capacidad de cálculo, pero trabajan sobre conjuntos de datos tan grandes que exceden toda la jerarquía de caché.",
+      "characteristics": [
+        "Realizan un volumen de cálculo tan alto que este sigue dominando sobre el tiempo de acceso a memoria, incluso a gran escala",
+        "No consiguen mantener todo su working set en caché, ni siquiera aplicando técnicas de blocking/tiling",
+        "Presentan buena localidad a nivel local (dentro de cada bloque procesado), pero no localidad global",
+        "El dataset completo se recorre repetidamente desde RAM en cada epoch o pasada",
+        "Mantienen una intensidad aritmética alta a pesar del volumen de datos (muchos FLOPs por byte movido)"
+      ],
+      "criteria": {
+        "accessPattern": "por bloques (a escala que excede L3)",
+        "workingSet": "grande",
+        "cacheBehavior": "block-friendly localmente, tráfico inevitable a RAM",
+        "computationalIntensity": "alta",
+        "operationsType": "floating-point",
+        "parallelization": "masivamente data-parallel",
+        "limitation": "capacidad de cómputo global del sistema"
+      },
+      "examples": [
+        {
+          "name": "Entrenamiento de modelos de Deep Learning (GEMM / Convolución)",
+          "description": "Operaciones de multiplicación de matrices y convolución sobre los pesos y activaciones de una red neuronal profunda a gran escala",
+          "justification": "Cada capa de una red neuronal profunda implica multiplicaciones de matrices con una complejidad de cálculo muy superior a la de acceso a datos, igual que en DGEMM. Sin embargo, en modelos a gran escala, el tamaño de los pesos y activaciones supera con creces la capacidad de la caché L3, obligando a recorrer los datos desde RAM de forma repetida durante el entrenamiento. Aun así, según el modelo Roofline, la altísima intensidad aritmética de estas operaciones mantiene el rendimiento limitado por la capacidad de cómputo (especialmente de unidades como los Tensor Cores en GPU) y no por el ancho de banda de memoria, por lo que sigue clasificándose como compute-bound pese a su gran working set.",
+          "sources": [
+            "Williams, S., et al. (2009). Roofline: An Insightful Visual Performance Model for Floating-Point Programs and Multicore Architectures",
+            "Anatomy of High-Performance Matrix Multiplication, Goto & van de Geijn"
+          ]
+        }
+      ]
+    }
+  ],
+  "criteria": [
+    {
+      "id": "accessPattern",
+      "name": "Patrones de Acceso a Memoria",
+      "description": "Clasificación según el acceso a los datos dentro de la jerarquía de memoria. Estos patrones determinan la localidad, los cache hits y la latencia.",
+      "color": "#3b82f6",
+      "values": [
+        {
+          "id": "secuencial",
+          "label": "Secuencial",
+          "description": "Acceso lineal y predecible a los datos.",
+          "characteristics": ["Alta localidad espacial", "Muchos cache hits", "Muy eficiente para prefetching"],
+          "example": "cat",
+          "justification": "Lectura de los archivos de forma lineal, avanzando byte a byte o bloque a bloque sin saltos ni accesos aleatorios. Este patrón produce alta localidad espacial, ya que los datos se consumen en el mismo orden en que están almacenados, lo que genera muchos caché hits y permite que el hardware aplique prefetching eficiente.",
+          "sources": ["https://man7.org/linux/man-pages/man1/cat.1.html (man de cat)"],
+          "relatedArchetypes": ["cpu-intensive", "bandwidth-bound", "io-bound"]
+        },
+        {
+          "id": "streaming",
+          "label": "Streaming (subtipo secuencial)",
+          "description": "Lectura secuencial de grandes volúmenes de datos sin reutilización.",
+          "characteristics": ["Alta localidad espacial", "Casi nula localidad temporal", "El objetivo es maximizar el ancho de banda"],
+          "example": "grep de Linux",
+          "justification": "El comando procesa archivos de texto de forma estrictamente secuencial. Lee el archivo bloque a bloque mediante llamadas a read(), sin realizar saltos aleatorios ni reutilizar datos previamente procesados. Cada bloque se consume una sola vez y se descarta, con alta localidad secuencial y muy pocos cache misses.",
+          "sources": ["https://www.gnu.org/software/grep/manual/grep.html"],
+          "relatedArchetypes": ["bandwidth-bound", "io-bound"]
+        },
+        {
+          "id": "aleatorio",
+          "label": "Aleatorio",
+          "description": "Acceso impredecible, sin patrón claro.",
+          "characteristics": ["Baja localidad espacial y temporal", "Muchos cache misses", "Alta latencia por frecuentes accesos a memoria principal"],
+          "example": "GIMP, aplicaciones de edición de imágenes",
+          "justification": "Las operaciones de edición y procesamiento de imágenes que implementan filtros no lineales, transformaciones geométricas u operaciones con máscaras requieren acceder a píxeles que no están contiguos en memoria. Esto produce baja localidad espacial, cache misses frecuentes y un patrón de acceso impredecible.",
+          "sources": ["Digital Image Processing, Rafael C. Gonzalez & Richard E. Woods"],
+          "relatedArchetypes": ["memory-intensive", "latency-bound"]
+        },
+        {
+          "id": "traversal-punteros",
+          "label": "Pointer Chasing (subtipo aleatorio)",
+          "description": "Acceso a memoria donde cada acceso depende del resultado del anterior.",
+          "characteristics": [
+            "Muy poca localidad",
+            "Accesos dependientes y secuenciales",
+            "Alto coste en latencia",
+            "Difícil prefetching: no se puede predecir la siguiente dirección"
+          ],
+          "example": "Garbage collection en lenguajes de alto nivel",
+          "justification": "Los Garbage Collectors deben recorrer el grafo de objetos del programa para determinar cuáles siguen en uso, siguiendo referencias desde las raíces del programa hacia todos los objetos alcanzables. Este proceso implica navegar árboles de objetos, listas enlazadas, estructuras dinámicas y grafos de dependencias creados en tiempo de ejecución. Cada acceso revela la dirección del siguiente objeto a visitar, lo que genera un patrón de acceso dependiente, secuencial y con muy baja localidad espacial. En los lenguajes de alto nivel esto es más pronunciado pues las referencias a los objetos no siguen el orden físico de la memoria, sino que son gestionadas en runtime y son reorganizadas según como vaya la ejecución.",
+          "sources": ["The Garbage Collection Handbook. Chapman & Hall, 2011"],
+          "relatedArchetypes": ["latency-bound"]
+        },
+        {
+          "id": "por-bloques",
+          "label": "Por Bloques",
+          "description": "Acceso organizado en bloques pequeños que caben en caché para maximizar la localidad.",
+          "characteristics": ["Alta localidad espacial y temporal", "Pocos cache misses", "Aprovecha la jerarquía de memoria"],
+          "example": "MATLAB en multiplicación de matrices",
+          "justification": "Para estas operaciones MATLAB utiliza la librería BLAS con el algoritmo GEMM, que divide las matrices en bloques que caben en la caché y se reutilizan intensivamente antes de pasar al siguiente bloque. Esto se denomina cache blocking o tiling y reduce los cache misses mejorando el rendimiento.",
+          "sources": [
+            "The Cache Performance and Optimization of Blocked Algorithms, Monica S. Lam, Edward E. Rothberg, Michael E. Wolf",
+            "Anatomy of High-Performance Matrix Multiplication, Goto & van de Geijn"
+          ],
+          "relatedArchetypes": ["cpu-intensive"]
+        }
+      ]
+    },
+
+    {
+      "id": "workingSet",
+      "name": "Working Set",
+      "description": "Tamaño del conjunto de datos vivos que una aplicación necesita mantener accesibles en un instante dado para ejecutarse sin esperas significativas por memoria.",
+      "color": "#8b5cf6",
+      "values": [
+        {
+          "id": "pequeño",
+          "label": "Pequeño (en caché)",
+          "description": "El conjunto de datos cabe completamente en la caché.",
+          "characteristics": ["Muy baja latencia", "Alto número de cache hits", "Rendimiento óptimo"],
+          "example": "Operación AXPY de BLAS 1",
+          "justification": "La operación AXPY (Y = a·X + Y) solo requiere acceder a dos elementos de los vectores y un escalar en cada iteración. Estos datos caben completamente en la caché L1, lo que elimina prácticamente todos los cache misses.",
+          "sources": ["https://www.netlib.org/lapack/explore-html/d5/d4b/group__axpy.html"],
+          "relatedArchetypes": ["cpu-intensive"]
+        },
+        {
+          "id": "mediano",
+          "label": "Mediano (en RAM)",
+          "description": "El conjunto de datos cabe en RAM, pero no en la caché.",
+          "characteristics": ["Accesos frecuentes a memoria principal", "Mayor latencia", "La aplicación puede volverse memory-bound"],
+          "example": "MATLAB trabajando con matrices muy grandes",
+          "justification": "Las matrices exceden la capacidad de caché, obligando a acceder constantemente a RAM. MATLAB utiliza BLAS para intentar optimizar el uso de memoria, pero cuando las matrices son demasiado grandes debe acceder a RAM, aumentando la latencia y reduciendo el rendimiento.",
+          "sources": ["Anatomy of High-Performance Matrix Multiplication, Goto & van de Geijn"],
+          "relatedArchetypes": ["memory-intensive", "bandwidth-bound", "latency-bound"]
+        },
+        {
+          "id": "grande",
+          "label": "Grande (supera la RAM)",
+          "description": "El conjunto de datos supera la capacidad de la RAM.",
+          "characteristics": [
+            "Se producen page faults: el procesador solicita datos que no están en RAM y el SO debe cargarlos desde almacenamiento",
+            "El sistema recurre al swapping (intercambio entre RAM y disco)",
+            "El rendimiento cae drásticamente, ya que el acceso a disco es miles de veces más lento que a RAM"
+          ],
+          "example": "PostgreSQL consultando bases de datos muy grandes",
+          "justification": "Si el tamaño de la base excede la memoria disponible, el sistema operativo cargará las páginas desde el disco. Cuando PostgreSQL solicita una página que no está en RAM, se produce un fallo de página. Si la RAM está llena, debe expulsar una página existente. Si esa página es necesaria poco después, se produce thrashing: el sistema pasa más tiempo moviendo datos entre disco y RAM que procesando la consulta.",
+          "sources": [
+            "Hellerstein, J. M., Stonebraker, M., & Hamilton, J. (2007). Architecture of a Database System.",
+            "Denning, P. J. (1968). The Working Set Model for Program Behavior. Communications of the ACM."
+          ],
+          "relatedArchetypes": ["io-bound"]
+        }
+      ]
+    },
+
+    {
+      "id": "cacheBehavior",
+      "name": "Impacto en Jerarquía de Caché",
+      "description": "Según si se aprovechan o no los principios de localidad temporal y espacial.",
+      "color": "#f59e0b",
+      "values": [
+        {
+          "id": "amigable",
+          "label": "Cache-Friendly",
+          "description": "Aplicaciones que aprovechan bien la jerarquía de caché.",
+          "characteristics": [
+            "Alto número de cache hits",
+            "Accesos regulares y predecibles",
+            "Buena localidad espacial y temporal",
+            "Working set pequeño o bien estructurado en bloques"
+          ],
+          "example": "FFTW",
+          "justification": "FFTW utiliza algoritmos cache-oblivious y blocking para reorganizar el cálculo de la FFT en subproblemas que caben en la caché. Esto maximiza la localidad y reduce los cache misses.",
+          "sources": [
+            "The Design and Implementation of FFTW3, Frigo, M., & Johnson, S. G.",
+            "Implementaciones optimizadas de FFT (FFTW, Cooley–Tukey)"
+          ],
+          "relatedArchetypes": ["cpu-intensive"]
+        },
+        {
+          "id": "no-amigable",
+          "label": "Cache-Unfriendly",
+          "description": "Aplicaciones que no aprovechan la caché y generan muchos cache misses.",
+          "characteristics": [
+            "Accesos irregulares o dependientes (pointer chasing)",
+            "Baja localidad espacial y temporal",
+            "Alta latencia y bajo rendimiento",
+            "Working set disperso o difícil de agrupar"
+          ],
+          "example": "gcc",
+          "justification": "Los compiladores manipulan árboles, tablas de símbolos, grafos con dependencias y estructuras enlazadas dispersas en memoria. Esto produce pointer chasing, baja localidad y muchos cache misses.",
+          "sources": [
+            "Análisis de pointer chasing en arquitecturas modernas",
+            "Berkeley Dwarfs (Graph Traversal)"
+          ],
+          "relatedArchetypes": ["memory-intensive", "latency-bound"]
+        }
+      ]
+    },
+
+    {
+      "id": "computationalIntensity",
+      "name": "Intensidad Computacional (Métrica Roofline)",
+      "description": "Relación de operaciones aritméticas a bytes de datos movidos (FLOP/byte). Métrica clave en el modelo Roofline que determina limitación por cálculo vs memoria.",
+      "color": "#10b981",
+      "values": [
+        {
+          "id": "muy-alta",
+          "label": "Muy Alta (> 10 FLOP/byte)",
+          "description": "Más de ~10 FLOP por byte; claramente limitado por cálculo.",
+          "example": "Multiplicación de matriz densa",
+          "rooflineRegime": "Limitado por cálculo",
+          "expectedBottleneck": "FLOP/ciclo de CPU",
+          "relatedArchetypes": ["cpu-intensive"]
+        },
+        {
+          "id": "alta",
+          "label": "Alta (2-10 FLOP/byte)",
+          "description": "2–10 FLOP por byte; en o arriba del punto de cresta del Roofline.",
+          "example": "Computación FFT",
+          "rooflineRegime": "Limitado por cálculo",
+          "expectedBottleneck": "FLOP/ciclo de CPU",
+          "relatedArchetypes": ["cpu-intensive"]
+        },
+        {
+          "id": "media",
+          "label": "Media (~1 FLOP/byte)",
+          "description": "~1 FLOP por byte; en o cerca del punto de cresta del Roofline.",
+          "example": "Multiplicación matriz-vector dispersa",
+          "rooflineRegime": "Punto de cresta (ambos CPU y memoria importan)",
+          "expectedBottleneck": "Tanto CPU como ancho de banda",
+          "relatedArchetypes": ["latency-bound", "inherently-sequential", "task-parallel-irregular"]
+        },
+        {
+          "id": "baja",
+          "label": "Baja (< 1 FLOP/byte)",
+          "description": "Menos de 1 FLOP por byte; claramente limitado por memoria o I/O.",
+          "example": "Copia vectorial, benchmark stream",
+          "rooflineRegime": "Limitado por memoria o I/O",
+          "expectedBottleneck": "Ancho de banda o latencia",
+          "relatedArchetypes": ["bandwidth-bound", "pointer-chasing", "io-bound"]
+        }
+      ]
+    },
+    {
+      "id": "parallelization",
+      "name": "Potencial de Paralelización",
+      "description": "Cómo de fácil y efectivamente la carga de trabajo puede explotar recursos hardware paralelos. Determina escalabilidad y potencial de aceleración.",
+      "color": "#06b6d4",
+      "values": [
+        {
+          "id": "data-parallel",
+          "label": "Data Parallel",
+          "description": "La misma operación se aplica independientemente a muchos elementos de datos; trivialmente paralelizable.",
+          "example": "Operaciones elemento a elemento de matriz",
+          "expectedSpeedup": "Casi lineal (hasta número de núcleos)",
+          "synchronizationOverhead": "Mínimo",
+          "loadBalance": "Excelente (scheduling estático)",
+          "relatedArchetypes": ["cpu-intensive", "bandwidth-bound", "io-bound"]
+        },
+        {
+          "id": "task-parallel",
+          "label": "Task Parallel",
+          "description": "Diferentes tareas independientes ejecutadas concurrentemente; requiere schedulers de robo de trabajo.",
+          "example": "BFS paralelo de grafo",
+          "expectedSpeedup": "Sublineal (depende de balanceo de carga)",
+          "synchronizationOverhead": "Moderado",
+          "loadBalance": "Bueno (con scheduling dinámico)",
+          "relatedArchetypes": ["task-parallel-irregular"]
+        },
+        {
+          "id": "irregular",
+          "label": "Paralelismo Irregular",
+          "description": "Existe algo de paralelismo pero con estructura y dependencias impredecibles.",
+          "example": "Computaciones dispersas irregulares",
+          "expectedSpeedup": "Altamente variable",
+          "synchronizationOverhead": "Alto",
+          "loadBalance": "Pobre (difícil de predecir)",
+          "relatedArchetypes": ["latency-bound"]
+        },
+        {
+          "id": "secuencial",
+          "label": "Secuencial",
+          "description": "Sin paralelismo explotable; el algoritmo es inherentemente serial (Ley de Amdahl aplica).",
+          "example": "Relaciones de recurrencia iterativas",
+          "expectedSpeedup": "Mínimo (fracción serial limita escalado)",
+          "synchronizationOverhead": "N/A",
+          "loadBalance": "N/A",
+          "relatedArchetypes": ["inherently-sequential", "pointer-chasing"]
+        },
+        {
+          "id": "masivamente-paralelizable",
+          "label": "Masivamente Paralelizable",
+          "description": "Aplicaciones con muy pocas dependencias entre tareas. Escalan casi linealmente con más núcleos.",
+          "characteristics": [
+            "Tareas independientes",
+            "Casi sin comunicación ni sincronización",
+            "Ideal para GPUs y arquitecturas many-core"
+          ],
+          "example": "Renderizado de imágenes con Ray Tracing",
+          "justification": "En el renderizado con Ray Tracing, cada píxel puede calcularse de forma completamente aislada y sin dependencias respecto a los demás. La técnica analiza de forma independiente cada píxel para determinar su color, sombras, reflejos y efectos de iluminación. El análisis se puede realizar con un píxel por núcleo, lo que permite una distribución trivial del trabajo y un escalado casi lineal con el número de unidades de procesamiento disponibles.",
+          "sources": [
+            "Programming Massively Parallel Processors (Kirk & Hwu)",
+            "High Performance Rendering (Aila & Laine)"
+          ],
+          "expectedSpeedup": "Casi lineal (escalado con número de núcleos/hilos)",
+          "synchronizationOverhead": "Mínimo o nulo",
+          "loadBalance": "Excelente (particionado trivial del dominio)",
+          "relatedArchetypes": ["cpu-intensive"]
+        }
+      ]
+    }
+  ],
+
+  "relationships": {
+    "archetypeToCategory": {
+      "Limitado por Computación": ["cpu-intensive"],
+      "Limitado por Memoria": ["bandwidth-bound"],
+      "Sensible a Latencia": ["latency-bound", "pointer-chasing"],
+      "Limitado por I/O": ["io-bound"],
+      "Dependencias Seriales": ["inherently-sequential"],
+      "Paralelismo Irregular": ["task-parallel-irregular"]
+    },
+    "architectureRecommendations": {
+      "cpu-intensive": {
+        "cpuArchitecture": "Alta frecuencia, superescalar ancho, FPU grande",
+        "memory": "Ancho de banda suficiente, caché L3 crítico",
+        "accelerators": "GPU (CUDA/HIP), FPU especializado"
+      },
+      "bandwidth-bound": {
+        "cpuArchitecture": "Frecuencia moderada, enfoque en controlador de memoria",
+        "memory": "Ancho de banda muy alto (HBM, MCDRAM, NUMA multi-socket)",
+        "accelerators": "GPU con memoria de alto ancho de banda"
+      },
+      "latency-bound": {
+        "cpuArchitecture": "Ventana grande fuera de orden, ejecución especulativa",
+        "memory": "Prefetching agresivo, optimización de caché",
+        "accelerators": "Puede no ayudar; limitado por latencia de CPU"
+      },
+      "pointer-chasing": {
+        "cpuArchitecture": "Ventana grande de instrucciones, prefetch de hardware deshabilitado",
+        "memory": "Irrelevante (latencia domina)",
+        "accelerators": "GPU no adecuada; rendimiento de hilo único crítico"
+      },
+      "io-bound": {
+        "cpuArchitecture": "Velocidad de CPU irrelevante; enfoque en subsistema I/O",
+        "memory": "Irrelevante (I/O domina)",
+        "accelerators": "SSDs NVMe, redes rápidas (100GbE+)"
+      },
+      "inherently-sequential": {
+        "cpuArchitecture": "Rendimiento de hilo único máximo (alta frecuencia, IPC)",
+        "memory": "Caché de baja latencia, predicción de rama precisa",
+        "accelerators": "No adecuado; CPU debe ejecutar serialmente"
+      },
+      "task-parallel-irregular": {
+        "cpuArchitecture": "Buen balance general, ejecución fuera de orden",
+        "memory": "Cachés multi-nivel, schedulers flexibles",
+        "accelerators": "GPU útil para algunas fases, CPU para otras"
+      }
+    }
+  },
+
+  "conversionGuides": {
+    "pythonPandas": "Convertir a DataFrame con pd.DataFrame([arch['metrics'] for arch in archetypes])",
+    "plotly": "Usar plotly.express para scatter interactivo, heatmap, gráficos radar",
+    "matplotlib": "Usar seaborn.heatmap() para visualización de matriz",
+    "powerbi": "Importar JSON como CSV o usar Power Query para parsear estructura",
+    "excel": "Importar como CSV, usar tablas dinámicas para análisis de criterios"
+  }
+}

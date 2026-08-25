@@ -1,0 +1,147 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Criterion card ── */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.cardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.cardDesc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+/* ── Value buttons ── */
+.valuesWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.valueBtn {
+  display: inline-block;
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: var(--radius);
+  border: 1px solid;
+  font-weight: 500;
+  transition: background 0.15s, transform 0.1s;
+  text-align: left;
+  letter-spacing: 0.01em;
+}
+
+.valueBtn:hover {
+  transform: translateY(-1px);
+}
+
+/* ── Expanded detail panel ── */
+.detail {
+  margin-top: 8px;
+  margin-bottom: 4px;
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid;
+}
+
+.detailDescription {
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.sectionLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.characteristicsList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.characteristicItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.bullet {
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.exampleSection {
+  margin-bottom: 12px;
+}
+
+.exampleName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.exampleJustification {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.sourcesList {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sourceItem {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.relatedSection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.relatedPill {
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  font-weight: 500;
+}
