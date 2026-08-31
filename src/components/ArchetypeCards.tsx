@@ -1,4 +1,34 @@
- 
+'use client';
+
+import { useState } from 'react';
+import styles from './ArchetypeCards.module.css';
+
+const PALETTE = ['#c0762a', '#2563a8', '#6d3fb5', '#c0304a', '#1a7a55', '#4a5a72', '#0e7490'];
+
+interface Example {
+  name: string;
+  description: string;
+  justification: string;
+  sources: string[];
+}
+
+interface Archetype {
+  id: string;
+  name: string;
+  shortDescription: string;
+  characteristics: string[];
+  criteria: Record<string, string>;
+  examples: Example[];
+}
+
+export default function ArchetypeCards({ archetypes }: { archetypes: Archetype[] }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  return (
+    <div className={styles.grid}>
+      {archetypes.map((arch, i) => {
+        const hex = PALETTE[i % PALETTE.length];
+        const isOpen = expanded === arch.id;
         return (
           <div
             key={arch.id}
