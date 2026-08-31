@@ -114,8 +114,8 @@
       }
     },
     {
-      "id": "large-scale-compute-intensive",
-      "name": "Large-Scale Compute Intensive",
+      "id": "high-intensity-big-data-compute",
+      "name": "High-Intensity Big-Data Compute",
       "color": "#0e7490",
       "values": {
         "working_set": 100,

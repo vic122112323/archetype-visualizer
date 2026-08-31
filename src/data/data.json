@@ -197,8 +197,8 @@
     },
 
     {
-      "id": "large-scale-compute-intensive",
-      "name": "Large-Scale Compute Intensive",
+      "id": "high-intensity-big-data-compute",
+      "name": "High-Intensity Big-Data Compute",
       "shortDescription": "Aplicaciones cuyo rendimiento está limitado por la capacidad de cálculo, pero trabajan sobre conjuntos de datos tan grandes que exceden toda la jerarquía de caché.",
       "characteristics": [
         "Realizan un volumen de cálculo tan alto que este sigue dominando sobre el tiempo de acceso a memoria, incluso a gran escala",

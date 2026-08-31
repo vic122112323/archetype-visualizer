@@ -73,7 +73,7 @@ const EMPTY_COUNTERS: RawCounters = {
 /* ── Display helpers ── */
 const ARCHETYPE_COLORS: Record<string, string> = {
   'cpu-intensive':              '#3b82f6',
-  'large-scale-compute-intensive': '#0ea5e9',
+  'high-intensity-big-data-compute': '#0ea5e9',
   'memory-intensive':           '#8b5cf6',
   'latency-bound':              '#f59e0b',
   'bandwidth-bound':            '#10b981',
@@ -82,7 +82,7 @@ const ARCHETYPE_COLORS: Record<string, string> = {
 
 const ARCHETYPE_NAMES: Record<string, string> = {
   'cpu-intensive':              'CPU Intensive',
-  'large-scale-compute-intensive': 'Large-Scale Compute Intensive',
+  'high-intensity-big-data-compute': 'High-Intensity Big-Data Compute',
   'memory-intensive':           'Memory Intensive',
   'latency-bound':              'Latency Bound',
   'bandwidth-bound':            'Bandwidth Bound',
@@ -176,7 +176,7 @@ function predict(raw: RawCounters): PredictionResult {
 
   const scores: Record<string, number> = {
     'cpu-intensive':               0,
-    'large-scale-compute-intensive': 0,
+    'high-intensity-big-data-compute': 0,
     'memory-intensive':            0,
     'latency-bound':               0,
     'bandwidth-bound':             0,
@@ -200,28 +200,28 @@ function predict(raw: RawCounters): PredictionResult {
     if (dTMR < 0.03)        scores['cpu-intensive'] += 1;
   }
 
-  // Large-Scale Compute Intensive — high compute (high instructions/LLC-miss) but
+  // High-Intensity Big-Data Compute — high compute (high instructions/LLC-miss) but
   // also significant LLC traffic because the working set exceeds the whole cache.
   // Distinguished from plain CPU-intensive by having a high LLC load volume while
   // the LLC-miss *rate* can still be moderate (blocking keeps hit rate reasonable).
   if (instrPerLLCMiss !== null) {
-    if (instrPerLLCMiss > 5000)       scores['large-scale-compute-intensive'] += 4;
-    else if (instrPerLLCMiss > 1000)  scores['large-scale-compute-intensive'] += 2;
+    if (instrPerLLCMiss > 5000)       scores['high-intensity-big-data-compute'] += 4;
+    else if (instrPerLLCMiss > 1000)  scores['high-intensity-big-data-compute'] += 2;
   }
   // Large working set: substantial LLC loads even if miss rate is not extreme
   if (llcLoads > 0 && instructions > 0) {
     const llcLoadRate = llcLoads / instructions;
-    if (llcLoadRate > 0.05)           scores['large-scale-compute-intensive'] += 3;
-    else if (llcLoadRate > 0.01)      scores['large-scale-compute-intensive'] += 1;
+    if (llcLoadRate > 0.05)           scores['high-intensity-big-data-compute'] += 3;
+    else if (llcLoadRate > 0.01)      scores['high-intensity-big-data-compute'] += 1;
   }
   // Low branch miss rate (regular, blocked access pattern)
   if (branchMissRate !== null) {
-    if (brMR < 0.02)                  scores['large-scale-compute-intensive'] += 2;
-    else if (brMR < 0.05)             scores['large-scale-compute-intensive'] += 1;
+    if (brMR < 0.02)                  scores['high-intensity-big-data-compute'] += 2;
+    else if (brMR < 0.05)             scores['high-intensity-big-data-compute'] += 1;
   }
   // Some LLC misses expected (data exceeds L3) but not as high as latency-bound
   if (llcMissRate !== null) {
-    if (llcMR > 0.05 && llcMR < 0.4) scores['large-scale-compute-intensive'] += 2;
+    if (llcMR > 0.05 && llcMR < 0.4) scores['high-intensity-big-data-compute'] += 2;
   }
 
   // Memory-intensive — high LLC + L1D miss rates
