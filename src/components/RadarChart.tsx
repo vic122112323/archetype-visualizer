@@ -30,7 +30,7 @@ interface Props {
 const CX = 200;
 const CY = 200;
 const R = 120;
-const LABEL_R = 172;
+const LABEL_R = 182;
 const VALUE_LABEL_R = 132;
 const N = 5;
 
@@ -101,7 +101,7 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
       </div>
 
       <div className={styles.svgWrapper}>
-      <svg viewBox="-80 -20 560 440" className={styles.svg} aria-label={`Diagrama radial de ${archetype.name}`}>
+      <svg viewBox="-100 -20 600 440" className={styles.svg} aria-label={`Diagrama radial de ${archetype.name}`}>
         {/* Grid rings */}
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <polygon
@@ -182,6 +182,13 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
           const { x, y } = polar(LABEL_R, angle);
           const anchor = textAnchor(angle);
           const words = axis.label.split(' ');
+          const lines = words.length > 1
+            ? [words.slice(0, Math.ceil(words.length / 2)).join(' '), words.slice(Math.ceil(words.length / 2)).join(' ')]
+            : [axis.label];
+          // Stack lines away from the chart center so the wrapped label never
+          // drifts inward toward the value badge sitting near the data point.
+          const outwardIsUp = Math.sin(angle) < 0;
+          const lineHeight = 12;
           return (
             <text
               key={axis.id}
@@ -191,12 +198,12 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
               fill="var(--text-secondary)"
               fontWeight="600"
               textAnchor={anchor}
-              dominantBaseline="middle"
+              dominantBaseline={lines.length > 1 ? undefined : 'middle'}
             >
-              {words.length > 1 ? (
+              {lines.length > 1 ? (
                 <>
-                  <tspan x={x.toFixed(2)} dy="-6">{words.slice(0, Math.ceil(words.length / 2)).join(' ')}</tspan>
-                  <tspan x={x.toFixed(2)} dy="13">{words.slice(Math.ceil(words.length / 2)).join(' ')}</tspan>
+                  <tspan x={x.toFixed(2)} dy={outwardIsUp ? -lineHeight : 0}>{lines[0]}</tspan>
+                  <tspan x={x.toFixed(2)} dy={lineHeight}>{lines[1]}</tspan>
                 </>
               ) : axis.label}
             </text>
