@@ -27,10 +27,17 @@ export default function ScaleExplanation() {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
       >
-        <span className={styles.toggleTitle}>
-          Guía de interpretación de los diagramas
+        <div className={styles.toggleTextGroup}>
+          <span className={styles.toggleTitle}>
+            Guía de interpretación de los diagramas
+          </span>
+          <span className={styles.toggleHint}>
+            {open ? 'Toca para ocultar' : 'Toca para desplegar y ver el detalle de cada eje'}
+          </span>
+        </div>
+        <span className={styles.toggleIconWrap}>
+          <span className={styles.toggleIcon}>▼</span>
         </span>
-        <span className={styles.toggleIcon}>{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (

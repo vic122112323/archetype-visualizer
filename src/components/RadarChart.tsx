@@ -101,7 +101,7 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
       </div>
 
       <div className={styles.svgWrapper}>
-      <svg viewBox="0 0 400 400" className={styles.svg} aria-label={`Diagrama radial de ${archetype.name}`}>
+      <svg viewBox="-60 0 520 400" className={styles.svg} aria-label={`Diagrama radial de ${archetype.name}`}>
         {/* Grid rings */}
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <polygon
@@ -193,7 +193,7 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
               textAnchor={anchor}
               dominantBaseline="middle"
             >
-              {words.length > 2 ? (
+              {words.length > 1 ? (
                 <>
                   <tspan x={x.toFixed(2)} dy="-6">{words.slice(0, Math.ceil(words.length / 2)).join(' ')}</tspan>
                   <tspan x={x.toFixed(2)} dy="13">{words.slice(Math.ceil(words.length / 2)).join(' ')}</tspan>
