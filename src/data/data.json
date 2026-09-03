@@ -390,8 +390,8 @@
 
     {
       "id": "computationalIntensity",
-      "name": "Intensidad Computacional (Métrica Roofline)",
-      "description": "Relación de operaciones aritméticas a bytes de datos movidos (FLOP/byte). Métrica clave en el modelo Roofline que determina limitación por cálculo vs memoria.",
+      "name": "Intensidad Computacional",
+      "description": "Relación de operaciones aritméticas a bytes de datos movidos (FLOP/byte).",
       "color": "#10b981",
       "values": [
         {

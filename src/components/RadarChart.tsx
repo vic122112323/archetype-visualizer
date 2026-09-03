@@ -30,7 +30,7 @@ interface Props {
 const CX = 200;
 const CY = 200;
 const R = 120;
-const LABEL_R = 148;
+const LABEL_R = 172;
 const VALUE_LABEL_R = 132;
 const N = 5;
 
@@ -101,7 +101,7 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
       </div>
 
       <div className={styles.svgWrapper}>
-      <svg viewBox="-60 0 520 400" className={styles.svg} aria-label={`Diagrama radial de ${archetype.name}`}>
+      <svg viewBox="-80 -20 560 440" className={styles.svg} aria-label={`Diagrama radial de ${archetype.name}`}>
         {/* Grid rings */}
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <polygon
