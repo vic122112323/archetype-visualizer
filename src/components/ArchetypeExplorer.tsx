@@ -117,7 +117,6 @@ export default function ArchetypeExplorer() {
         </nav>
       </aside>
 
-      {/* ── Main content ── */}
       <section
         className={`${styles.content} ${!showDetail ? styles.contentHiddenMobile : ''}`}
       >
@@ -140,7 +139,6 @@ export default function ArchetypeExplorer() {
   );
 }
 
-/* ── Introduction ── */
 function IntroPanel() {
   return (
     <div className={styles.intro}>
@@ -153,8 +151,8 @@ function IntroPanel() {
       <p className={styles.introText}>
         Identificar el arquetipo de una aplicación permite seleccionar la arquitectura hardware más
         adecuada y aplicar las optimizaciones con mayor impacto potencial. Esta clasificación se
-        basa en el <strong>modelo Roofline</strong> (Williams et al., 2009) y complementa otros
-        modelos de análisis de rendimiento computacional.
+        basa en varios conocidos modelos como
+        en el <strong>modelo Roofline</strong> (Williams et al., 2009).
       </p>
       <p className={styles.introText}>
         Existen dos categorías principales de limitación: <strong>limitado por cómputo</strong>

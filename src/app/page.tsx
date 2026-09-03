@@ -46,7 +46,7 @@ export default function Home() {
       </main>
 
       <footer className={styles.footer}>
-        Visualizador de Arquetipos — Proyecto TFG
+        Visualizador de Arquetipos
       </footer>
     </div>
   );

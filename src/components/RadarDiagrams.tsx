@@ -21,24 +21,20 @@ export default function RadarDiagrams() {
 
   return (
     <div className={styles.root}>
-      {/* Scale explanation guide */}
       <ScaleExplanation />
 
-      {/* Combined diagram */}
       <CombinedRadarChart archetypes={radarData.archetypes} axes={radarData.axes} />
 
       <div className={styles.sectionDivider}>
         <span className={styles.sectionLabel}>Arquetipos Individuales</span>
       </div>
 
-      {/* Standalone archetypes */}
       <div className={styles.standaloneGrid}>
         {trueStandalone.map((arch) => (
           <RadarChart key={arch.id} archetype={arch} axes={radarData.axes} />
         ))}
       </div>
 
-      {/* Family groups (Memory Intensive + subtypes) */}
       {parents.map((parent) => {
         const subtypes = radarData.archetypes.filter(
           (a) => 'parentId' in a && a.parentId === parent.id

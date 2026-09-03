@@ -4,7 +4,6 @@
   gap: 28px;
 }
 
-/* ── Section divider ── */
 .sectionDivider {
   display: flex;
   align-items: center;
@@ -28,7 +27,6 @@
   white-space: nowrap;
 }
 
-/* ── Standalone grid ── */
 .standaloneGrid {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
@@ -41,7 +39,6 @@
   }
 }
 
-/* ── Family group ── */
 .group {
   display: flex;
   flex-direction: column;
