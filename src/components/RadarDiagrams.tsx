@@ -8,10 +8,12 @@ import styles from './RadarDiagrams.module.css';
 
 type RawArch = typeof radarData.archetypes[number];
 
+// Looks up an archetype's name by id
 function getParentName(parentId: string) {
   return radarData.archetypes.find((a) => a.id === parentId)?.name ?? parentId;
 }
 
+// Groups archetypes into  parent/subtype families for display
 export default function RadarDiagrams() {
   const standalone = radarData.archetypes.filter((a) => !('parentId' in a) || !a.parentId);
   const parents = standalone.filter((a) =>

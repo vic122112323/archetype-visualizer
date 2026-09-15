@@ -7,7 +7,6 @@ import styles from './CriteriaExplorer.module.css';
 type Criterion = typeof data.criteria[number];
 type CriterionValue = Criterion['values'][number];
 
-// Fields displayed with labels in the value detail view
 const EXTRA_FIELD_LABELS: Record<string, string> = {
   rooflineRegime: 'Régimen Roofline',
   expectedBottleneck: 'Cuello de botella esperado',
@@ -18,7 +17,6 @@ const EXTRA_FIELD_LABELS: Record<string, string> = {
 
 const EXTRA_FIELD_KEYS = Object.keys(EXTRA_FIELD_LABELS);
 
-// Archetype name lookup
 const archetypeNames: Record<string, string> = Object.fromEntries(
   data.archetypes.map((a) => [a.id, a.name])
 );
@@ -27,6 +25,7 @@ type Selection =
   | { type: 'criterion'; criterionId: string }
   | { type: 'value'; criterionId: string; valueId: string };
 
+// Lists criteri and their values, with a detail view for each
 export default function CriteriaExplorer() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Selection | null>(null);
@@ -70,7 +69,6 @@ export default function CriteriaExplorer() {
 
   return (
     <div className={styles.layout}>
-      {/* ── Sidebar ── */}
       <aside
         className={`${styles.sidebar} ${showDetail ? styles.sidebarHiddenMobile : ''}`}
       >
@@ -86,7 +84,6 @@ export default function CriteriaExplorer() {
               selected?.criterionId === criterion.id;
             return (
               <div key={criterion.id} className={styles.criterionGroup}>
-                {/* Criterion header */}
                 <div className={styles.criterionRow}>
                   <button
                     className={`${styles.criterionBtn} ${isCriterionActive && selected?.type === 'criterion' ? styles.criterionBtnActive : ''}`}
@@ -109,7 +106,6 @@ export default function CriteriaExplorer() {
                   </button>
                 </div>
 
-                {/* Values list */}
                 {isOpen && (
                   <div className={styles.valuesList}>
                     {criterion.values.map((v) => {
@@ -140,7 +136,6 @@ export default function CriteriaExplorer() {
         </nav>
       </aside>
 
-      {/* ── Content panel ── */}
       <section
         className={`${styles.content} ${!showDetail ? styles.contentHiddenMobile : ''}`}
       >
@@ -166,7 +161,7 @@ export default function CriteriaExplorer() {
   );
 }
 
-/* ── Introduction ── */
+// Default view before a criteri is selected
 function IntroPanel() {
   return (
     <div className={styles.intro}>
@@ -194,7 +189,7 @@ function IntroPanel() {
   );
 }
 
-/* ── Criterion overview ── */
+// Overview of a single criteri and its possible values
 function CriterionDetail({
   criterion,
   onSelectValue,
@@ -239,7 +234,7 @@ function CriterionDetail({
   );
 }
 
-/* ── Value detail ── */
+// Detail view for a single value of a criteri
 function ValueDetail({
   criterion,
   value,
@@ -264,7 +259,6 @@ function ValueDetail({
         <p className={styles.detailLead}>{value.description}</p>
       </header>
 
-      {/* Characteristics */}
       {'characteristics' in value && value.characteristics && value.characteristics.length > 0 && (
         <section className={styles.section}>
           <h3 className={styles.sectionTitle}>Características</h3>
@@ -279,7 +273,6 @@ function ValueDetail({
         </section>
       )}
 
-      {/* Extra classification fields */}
       {extraFields.length > 0 && (
         <section className={styles.section}>
           <h3 className={styles.sectionTitle}>Información Técnica</h3>
@@ -294,7 +287,6 @@ function ValueDetail({
         </section>
       )}
 
-      {/* Example */}
       {'example' in value && value.example && (
         <section className={styles.section}>
           <h3 className={styles.sectionTitle}>Ejemplo</h3>
@@ -307,7 +299,6 @@ function ValueDetail({
         </section>
       )}
 
-      {/* Sources */}
       {'sources' in value && value.sources && (value.sources as string[]).length > 0 && (
         <section className={styles.section}>
           <h3 className={styles.sectionTitle}>Fuentes</h3>
@@ -319,7 +310,6 @@ function ValueDetail({
         </section>
       )}
 
-      {/* Related archetypes */}
       {value.relatedArchetypes.length > 0 && (
         <section className={styles.section}>
           <h3 className={styles.sectionTitle}>Arquetipos Relacionados</h3>

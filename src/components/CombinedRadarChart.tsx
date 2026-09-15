@@ -27,12 +27,14 @@ interface Props {
   axes: Axis[];
 }
 
+// Geometry constants for the SVG radar
 const CX = 210;
 const CY = 210;
 const R = 130;
 const LABEL_R = 160;
 const N = 5;
 
+// Helpers to place points around the radar
 function toRad(deg: number) { return (deg * Math.PI) / 180; }
 function axisAngle(i: number) { return toRad(-90 + (360 / N) * i); }
 function polar(r: number, angle: number) {
@@ -53,6 +55,7 @@ function textAnchor(angle: number) {
   return 'middle';
 }
 
+// Overlays every archetype on one radar chart, with a legend
 export default function CombinedRadarChart({ archetypes, axes }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -79,7 +82,6 @@ export default function CombinedRadarChart({ archetypes, axes }: Props) {
 
       <div className={styles.body}>
         <svg viewBox="-60 0 540 420" className={styles.svg} aria-label="Diagrama radial comparativo de todos los arquetipos">
-          {/* Grid rings */}
           {[0.25, 0.5, 0.75, 1].map((f) => (
             <polygon
               key={f}
@@ -91,7 +93,6 @@ export default function CombinedRadarChart({ archetypes, axes }: Props) {
             />
           ))}
 
-          {/* Grid ring % labels */}
           {[25, 50, 75, 100].map((pct) => {
             const { x, y } = polar(R * (pct / 100), axisAngle(0));
             return (
@@ -101,7 +102,6 @@ export default function CombinedRadarChart({ archetypes, axes }: Props) {
             );
           })}
 
-          {/* Axis lines */}
           {axes.map((_, i) => {
             const end = polar(R, axisAngle(i));
             return (
@@ -115,7 +115,6 @@ export default function CombinedRadarChart({ archetypes, axes }: Props) {
             );
           })}
 
-          {/* Each archetype polygon — subtypes with dashed stroke */}
           {archetypes.map((arch) => {
             const points = axes.map((axis, i) => {
               const v = arch.values[axis.id] ?? 0;
@@ -140,7 +139,6 @@ export default function CombinedRadarChart({ archetypes, axes }: Props) {
             );
           })}
 
-          {/* Axis labels */}
           {axes.map((axis, i) => {
             const angle = axisAngle(i);
             const { x, y } = polar(LABEL_R, angle);
@@ -168,7 +166,6 @@ export default function CombinedRadarChart({ archetypes, axes }: Props) {
           })}
         </svg>
 
-        {/* Legend */}
         <div className={styles.legend}>
           {archetypes.map((arch) => (
             <div key={arch.id} className={styles.legendItem}>

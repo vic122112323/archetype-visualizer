@@ -68,7 +68,6 @@
   padding: 10px 4px;
 }
 
-/* Fullscreen */
 .card:fullscreen {
   display: flex;
   flex-direction: column;
@@ -87,7 +86,6 @@
   width: 80vmin;
 }
 
-/* ── Legend ── */
 .legend {
   flex-shrink: 0;
   display: flex;

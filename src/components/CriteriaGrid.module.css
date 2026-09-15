@@ -10,7 +10,6 @@
   }
 }
 
-/* ── Criterion card ── */
 .card {
   background: var(--bg-surface);
   border: 1px solid var(--border);
@@ -33,7 +32,6 @@
   margin-bottom: 16px;
 }
 
-/* ── Value buttons ── */
 .valuesWrapper {
   display: flex;
   flex-direction: column;
@@ -56,7 +54,6 @@
   transform: translateY(-1px);
 }
 
-/* ── Expanded detail panel ── */
 .detail {
   margin-top: 8px;
   margin-bottom: 4px;

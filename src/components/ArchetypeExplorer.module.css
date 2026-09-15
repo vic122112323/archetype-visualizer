@@ -1,4 +1,3 @@
-/* ── Two-panel layout ── */
 .layout {
   display: flex;
   align-items: flex-start;
@@ -6,7 +5,6 @@
   min-height: calc(100vh - 160px);
 }
 
-/* ── Sidebar ── */
 .sidebar {
   width: 260px;
   flex-shrink: 0;
@@ -127,7 +125,6 @@
   text-align: center;
 }
 
-/* ── Content panel ── */
 .content {
   flex: 1;
   min-width: 0;
@@ -146,7 +143,6 @@
   padding: 0;
 }
 
-/* ── Intro panel ── */
 .intro {
   max-width: 680px;
 }
@@ -176,7 +172,6 @@
   color: var(--text-secondary);
 }
 
-/* ── Detail view ── */
 .detail {
   max-width: 960px;
 }
@@ -212,7 +207,6 @@
   max-width: 600px;
 }
 
-/* Two-column layout inside detail */
 .detailBody {
   display: flex;
   gap: 28px;
@@ -230,7 +224,6 @@
   flex-shrink: 0;
 }
 
-/* ── Sections ── */
 .section {
   margin-bottom: 28px;
 }
@@ -246,7 +239,6 @@
   border-bottom: 1px solid var(--border-light);
 }
 
-/* Characteristics */
 .charList {
   display: flex;
   flex-direction: column;
@@ -269,7 +261,6 @@
   margin-top: 1px;
 }
 
-/* Definition list / criteria table */
 .dl {
   display: flex;
   flex-direction: column;
@@ -308,14 +299,12 @@
   flex: 1;
 }
 
-/* Radar chart wrapper inside detail */
 .radarWrapper {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
-/* Examples */
 .examples {
   display: flex;
   flex-direction: column;
@@ -378,7 +367,6 @@
   line-height: 1.5;
 }
 
-/* ── Responsive ── */
 @media (max-width: 900px) {
   .detailBody {
     flex-direction: column;

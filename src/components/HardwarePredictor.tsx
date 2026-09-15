@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import styles from './HardwarePredictor.module.css';
 
-/* ── Counter definitions ── */
 const COUNTER_GROUPS = [
   {
     label: 'Instrucciones y Caché L1',
@@ -70,7 +69,6 @@ const EMPTY_COUNTERS: RawCounters = {
   'cache-misses':          '',
 };
 
-/* ── Display helpers ── */
 const ARCHETYPE_COLORS: Record<string, string> = {
   'cpu-intensive':              '#3b82f6',
   'high-intensity-big-data-compute': '#0ea5e9',
@@ -97,7 +95,6 @@ const CRITERIA_NAMES: Record<string, string> = {
   parallelization:        'Paralelización',
 };
 
-/* ── Prediction logic ── */
 interface DerivedMetrics {
   llcMissRate:    number | null;
   l1dMissRate:    number | null;
@@ -125,6 +122,7 @@ interface PredictionResult {
   metrics:         DerivedMetrics;
 }
 
+// Safe division: returns null when the denominator is missing
 function ratio(num: number, den: number): number | null {
   return den > 0 ? num / den : null;
 }
@@ -139,6 +137,7 @@ function fmtNum(v: number | null): string {
   return v.toFixed(1);
 }
 
+// Scores each archetype and predicts each criteri from the perf  ratios
 function predict(raw: RawCounters): PredictionResult {
   const n = (k: CounterKey) => {
     const v = parseFloat(raw[k]);
@@ -166,7 +165,6 @@ function predict(raw: RawCounters): PredictionResult {
   const iTLBMissRate   = ratio(iTLBMisses,  iTLBLoads);
   const instrPerLLCMiss = ratio(instructions, llcMisses);
 
-  // Use 0 when rate is unavailable so scoring still works on partial input
   const llcMR = llcMissRate    ?? 0;
   const l1dMR = l1dMissRate    ?? 0;
   const l1iMR = l1iMissRate    ?? 0;
@@ -183,7 +181,6 @@ function predict(raw: RawCounters): PredictionResult {
     'io-bound':                    0,
   };
 
-  // CPU-intensive — low miss rates across the board
   if (llcMissRate !== null) {
     if (llcMR < 0.05)       scores['cpu-intensive'] += 4;
     else if (llcMR < 0.15)  scores['cpu-intensive'] += 2;
@@ -200,31 +197,23 @@ function predict(raw: RawCounters): PredictionResult {
     if (dTMR < 0.03)        scores['cpu-intensive'] += 1;
   }
 
-  // High-Intensity Big-Data Compute — high compute (high instructions/LLC-miss) but
-  // also significant LLC traffic because the working set exceeds the whole cache.
-  // Distinguished from plain CPU-intensive by having a high LLC load volume while
-  // the LLC-miss *rate* can still be moderate (blocking keeps hit rate reasonable).
   if (instrPerLLCMiss !== null) {
     if (instrPerLLCMiss > 5000)       scores['high-intensity-big-data-compute'] += 4;
     else if (instrPerLLCMiss > 1000)  scores['high-intensity-big-data-compute'] += 2;
   }
-  // Large working set: substantial LLC loads even if miss rate is not extreme
   if (llcLoads > 0 && instructions > 0) {
     const llcLoadRate = llcLoads / instructions;
     if (llcLoadRate > 0.05)           scores['high-intensity-big-data-compute'] += 3;
     else if (llcLoadRate > 0.01)      scores['high-intensity-big-data-compute'] += 1;
   }
-  // Low branch miss rate (regular, blocked access pattern)
   if (branchMissRate !== null) {
     if (brMR < 0.02)                  scores['high-intensity-big-data-compute'] += 2;
     else if (brMR < 0.05)             scores['high-intensity-big-data-compute'] += 1;
   }
-  // Some LLC misses expected (data exceeds L3) but not as high as latency-bound
   if (llcMissRate !== null) {
     if (llcMR > 0.05 && llcMR < 0.4) scores['high-intensity-big-data-compute'] += 2;
   }
 
-  // Memory-intensive — high LLC + L1D miss rates
   if (llcMissRate !== null) {
     if (llcMR > 0.3)        scores['memory-intensive'] += 4;
     else if (llcMR > 0.15)  scores['memory-intensive'] += 2;
@@ -236,7 +225,6 @@ function predict(raw: RawCounters): PredictionResult {
     else if (l1dMR > 0.02)  scores['memory-intensive'] += 1;
   }
 
-  // Latency-bound — random access: high dTLB + LLC miss rates
   if (dTLBMissRate !== null) {
     if (dTMR > 0.15)        scores['latency-bound'] += 5;
     else if (dTMR > 0.08)   scores['latency-bound'] += 3;
@@ -247,7 +235,6 @@ function predict(raw: RawCounters): PredictionResult {
     else if (llcMR > 0.2)   scores['latency-bound'] += 2;
   }
 
-  // Bandwidth-bound — high LLC misses but sequential (low dTLB, predictable branches)
   if (llcMissRate !== null) {
     if (llcMR > 0.2)        scores['bandwidth-bound'] += 3;
     else if (llcMR > 0.1)   scores['bandwidth-bound'] += 1;
@@ -263,7 +250,6 @@ function predict(raw: RawCounters): PredictionResult {
     scores['bandwidth-bound'] += 1;
   }
 
-  // I/O Bound — CPU nearly idle: all rates very low
   const memoryPressure = llcMR + l1dMR + brMR;
   if (memoryPressure < 0.05) {
     scores['io-bound'] += 4;
@@ -272,7 +258,7 @@ function predict(raw: RawCounters): PredictionResult {
     scores['io-bound'] += 2;
   }
 
-  // Normalise to percentages
+  // Turn scores into percentages and rank archetypes by score
   const total = Object.values(scores).reduce((a, b) => a + b, 0);
   const archetypeScores = Object.entries(scores)
     .map(([id, score]) => ({
@@ -282,9 +268,6 @@ function predict(raw: RawCounters): PredictionResult {
     }))
     .sort((a, b) => b.score - a.score);
 
-  /* ── Criteria prediction ── */
-
-  // Access pattern
   let accessPattern: CriterionValue;
   if (dTMR > 0.1 && llcMR > 0.25) {
     accessPattern = { id: 'traversal-punteros', label: 'Pointer Chasing' };
@@ -298,7 +281,6 @@ function predict(raw: RawCounters): PredictionResult {
     accessPattern = { id: 'secuencial', label: 'Secuencial' };
   }
 
-  // Working set size
   let workingSet: CriterionValue;
   if (llcMR > 0.3 || (l1dMR > 0.1 && llcMR > 0.1)) {
     workingSet = { id: 'grande', label: 'Grande (supera la RAM)' };
@@ -308,13 +290,11 @@ function predict(raw: RawCounters): PredictionResult {
     workingSet = { id: 'pequeño', label: 'Pequeño (en caché)' };
   }
 
-  // Cache behavior
   const cacheBehavior: CriterionValue =
     llcMR > 0.2 || l1dMR > 0.05
       ? { id: 'no-amigable', label: 'Cache-Unfriendly' }
       : { id: 'amigable',    label: 'Cache-Friendly'   };
 
-  // Computational intensity — instructions per LLC miss as proxy for FLOP/byte
   let computationalIntensity: CriterionValue;
   const ipm = instrPerLLCMiss;
   if (ipm === null || ipm > 10000) {
@@ -327,7 +307,6 @@ function predict(raw: RawCounters): PredictionResult {
     computationalIntensity = { id: 'baja',     label: 'Baja (< 1 FLOP/byte)'      };
   }
 
-  // Parallelization
   let parallelization: CriterionValue;
   if (brMR > 0.08 || iTMR > 0.05 || l1iMR > 0.01) {
     parallelization = { id: 'irregular',    label: 'Paralelismo Irregular' };
@@ -346,7 +325,7 @@ function predict(raw: RawCounters): PredictionResult {
   };
 }
 
-/* ── Component ── */
+// Form for perf counters plus the predicted archetype and criteri
 export default function HardwarePredictor() {
   const [counters, setCounters] = useState<RawCounters>(EMPTY_COUNTERS);
   const [result, setResult]     = useState<PredictionResult | null>(null);
@@ -381,7 +360,6 @@ export default function HardwarePredictor() {
 
   return (
     <div className={styles.container}>
-      {/* ── Intro ── */}
       <div className={styles.intro}>
         <h2 className={styles.introTitle}>Predictor de Arquetipos</h2>
         <p className={styles.introText}>
@@ -392,7 +370,6 @@ export default function HardwarePredictor() {
         </p>
       </div>
 
-      {/* ── Input form ── */}
       <div className={styles.form}>
         {COUNTER_GROUPS.map(group => (
           <div key={group.label} className={styles.group}>
@@ -428,13 +405,11 @@ export default function HardwarePredictor() {
         </div>
       </div>
 
-      {/* ── Results ── */}
       {result && (
         <div className={styles.results}>
           <h3 className={styles.resultsTitle}>Resultados</h3>
 
           <div className={styles.resultsGrid}>
-            {/* Archetype scores */}
             <div className={styles.card}>
               <h4 className={styles.cardTitle}>Arquetipo predicho</h4>
               <div className={styles.scoreList}>
@@ -468,7 +443,6 @@ export default function HardwarePredictor() {
               </p>
             </div>
 
-            {/* Criteria values */}
             <div className={styles.card}>
               <h4 className={styles.cardTitle}>Criterios predichos</h4>
               <dl className={styles.criteriaList}>
@@ -482,7 +456,6 @@ export default function HardwarePredictor() {
             </div>
           </div>
 
-          {/* Derived metrics */}
           <div className={styles.metricsCard}>
             <h4 className={styles.cardTitle}>Métricas derivadas</h4>
             <div className={styles.metricsGrid}>

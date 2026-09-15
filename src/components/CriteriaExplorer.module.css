@@ -1,4 +1,3 @@
-/* ── Two-panel layout ── */
 .layout {
   display: flex;
   align-items: flex-start;
@@ -6,7 +5,6 @@
   min-height: calc(100vh - 160px);
 }
 
-/* ── Sidebar ── */
 .sidebar {
   width: 280px;
   flex-shrink: 0;
@@ -39,7 +37,6 @@
   padding: 4px 0;
 }
 
-/* Criterion group */
 .criterionGroup {
   border-bottom: 1px solid var(--border-light);
 }
@@ -104,7 +101,6 @@
   color: var(--text-secondary);
 }
 
-/* Values list */
 .valuesList {
   background: var(--bg-surface-alt);
   border-top: 1px solid var(--border-light);
@@ -143,7 +139,6 @@
   flex-shrink: 0;
 }
 
-/* ── Content panel ── */
 .content {
   flex: 1;
   min-width: 0;
@@ -162,7 +157,6 @@
   padding: 0;
 }
 
-/* ── Intro ── */
 .intro {
   max-width: 680px;
 }
@@ -192,7 +186,6 @@
   color: var(--text-secondary);
 }
 
-/* ── Detail view ── */
 .detail {
   max-width: 760px;
 }
@@ -246,7 +239,6 @@
   color: var(--accent);
 }
 
-/* Values overview cards */
 .valuesOverview {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
@@ -304,7 +296,6 @@
   margin-top: 6px;
 }
 
-/* ── Shared section styles ── */
 .section {
   margin-bottom: 24px;
 }
@@ -320,7 +311,6 @@
   border-bottom: 1px solid var(--border-light);
 }
 
-/* Characteristics */
 .charList {
   display: flex;
   flex-direction: column;
@@ -342,7 +332,6 @@
   margin-top: 1px;
 }
 
-/* Definition list */
 .dl {
   display: flex;
   flex-direction: column;
@@ -378,7 +367,6 @@
   padding: 8px 12px;
 }
 
-/* Example */
 .exCard {
   background: var(--bg-surface-alt);
   border: 1px solid var(--border-light);
@@ -399,7 +387,6 @@
   line-height: 1.65;
 }
 
-/* Sources */
 .sourcesList {
   display: flex;
   flex-direction: column;
@@ -412,7 +399,6 @@
   font-style: italic;
 }
 
-/* Related archetype chips */
 .relatedChips {
   display: flex;
   flex-wrap: wrap;
@@ -427,7 +413,6 @@
   border: 1px solid;
 }
 
-/* ── Responsive ── */
 @media (max-width: 700px) {
   .layout {
     display: block;

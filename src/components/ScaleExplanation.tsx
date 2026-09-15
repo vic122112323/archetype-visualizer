@@ -17,6 +17,7 @@ const AXIS_DESCRIPTIONS: Record<string, string> = {
     'Número de operaciones aritméticas por byte transferido desde memoria (FLOP/byte). Métrica central del modelo Roofline.',
 };
 
+// Helper legend explaining what each radar axis means
 export default function ScaleExplanation() {
   const [open, setOpen] = useState(false);
 

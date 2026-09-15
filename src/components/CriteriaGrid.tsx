@@ -30,6 +30,7 @@ interface Archetype {
   name: string;
 }
 
+// Grid of criteri cards, each with an expandable list of values
 export default function CriteriaGrid({
   criteria,
   archetypes,

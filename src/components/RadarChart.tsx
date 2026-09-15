@@ -27,6 +27,7 @@ interface Props {
   subtypeOf?: string;
 }
 
+// Geometry constants for the SVG radar
 const CX = 200;
 const CY = 200;
 const R = 120;
@@ -34,6 +35,7 @@ const LABEL_R = 182;
 const VALUE_LABEL_R = 132;
 const N = 5;
 
+// Helpers to place points around the radar
 function toRad(deg: number) { return (deg * Math.PI) / 180; }
 
 function axisAngle(i: number) {
@@ -58,11 +60,13 @@ function textAnchor(angle: number) {
   return 'middle';
 }
 
+// Picks the closest level label for an axis value
 function valueLabel(axisId: string, value: number, levels: Level[]) {
   const sorted = [...levels].sort((a, b) => Math.abs(a.value - value) - Math.abs(b.value - value));
   return sorted[0]?.label ?? String(value);
 }
 
+// Renders one archetype's radar chart + a table of its values
 export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -102,7 +106,6 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
 
       <div className={styles.svgWrapper}>
       <svg viewBox="-100 -20 600 440" className={styles.svg} aria-label={`Diagrama radial de ${archetype.name}`}>
-        {/* Grid rings */}
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <polygon
             key={f}
@@ -114,7 +117,6 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
           />
         ))}
 
-        {/* Grid ring labels (25 / 50 / 75 / 100) */}
         {[25, 50, 75, 100].map((pct) => {
           const { x, y } = polar(R * (pct / 100), axisAngle(0));
           return (
@@ -124,7 +126,6 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
           );
         })}
 
-        {/* Axis lines */}
         {axes.map((_, i) => {
           const end = polar(R, axisAngle(i));
           return (
@@ -138,7 +139,6 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
           );
         })}
 
-        {/* Filled data polygon */}
         <path
           d={dataPath}
           fill={archetype.color + '2a'}
@@ -147,12 +147,10 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
           strokeLinejoin="round"
         />
 
-        {/* Data points */}
         {dataPoints.map((p, i) => (
           <circle key={i} cx={p.x.toFixed(2)} cy={p.y.toFixed(2)} r={4} fill={archetype.color} />
         ))}
 
-        {/* Value labels at each data point */}
         {axes.map((axis, i) => {
           const angle = axisAngle(i);
           const v = archetype.values[axis.id] ?? 0;
@@ -176,7 +174,6 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
           );
         })}
 
-        {/* Axis labels (criterion names) */}
         {axes.map((axis, i) => {
           const angle = axisAngle(i);
           const { x, y } = polar(LABEL_R, angle);
@@ -185,8 +182,6 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
           const lines = words.length > 1
             ? [words.slice(0, Math.ceil(words.length / 2)).join(' '), words.slice(Math.ceil(words.length / 2)).join(' ')]
             : [axis.label];
-          // Stack lines away from the chart center so the wrapped label never
-          // drifts inward toward the value badge sitting near the data point.
           const outwardIsUp = Math.sin(angle) < 0;
           const lineHeight = 12;
           return (
@@ -212,7 +207,6 @@ export default function RadarChart({ archetype, axes, subtypeOf }: Props) {
       </svg>
       </div>
 
-      {/* Legend table */}
       <table className={styles.table}>
         <tbody>
           {axes.map((axis) => {

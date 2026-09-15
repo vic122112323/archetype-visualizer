@@ -18,13 +18,7 @@ const CRITERION_LABELS: Record<string, string> = {
   limitation: 'Limitación principal',
 };
 
-const ARCH_REC_LABELS: Record<string, string> = {
-  cpuArchitecture: 'CPU',
-  memory: 'Memoria',
-  accelerators: 'Aceleradores',
-};
-
-// Derive subtype relationships from radar.json
+// Relates each subtype to its parent archetype
 const subtypeParents: Record<string, string> = {};
 radarData.archetypes.forEach((a) => {
   if ('parentId' in a && a.parentId) {
@@ -33,11 +27,7 @@ radarData.archetypes.forEach((a) => {
   }
 });
 
-const archRecMap = data.relationships.architectureRecommendations as Record<
-  string,
-  Record<string, string>
->;
-
+// Lists archetypes and shows the detail view of the selected one
 export default function ArchetypeExplorer() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -59,8 +49,6 @@ export default function ArchetypeExplorer() {
   const radarArch = selectedId
     ? radarData.archetypes.find((a) => a.id === selectedId) ?? null
     : null;
-  const archRec = selectedId ? archRecMap[selectedId] ?? null : null;
-
   function select(id: string) {
     setSelectedId(id);
     setShowDetail(true);
@@ -72,7 +60,6 @@ export default function ArchetypeExplorer() {
 
   return (
     <div className={styles.layout}>
-      {/* ── Sidebar ── */}
       <aside
         className={`${styles.sidebar} ${showDetail ? styles.sidebarHiddenMobile : ''}`}
       >
@@ -131,7 +118,6 @@ export default function ArchetypeExplorer() {
           <ArchetypeDetail
             archetype={selected}
             radarArch={radarArch}
-            archRec={archRec}
           />
         )}
       </section>
@@ -139,6 +125,7 @@ export default function ArchetypeExplorer() {
   );
 }
 
+// Default view before an archetype is selected
 function IntroPanel() {
   return (
     <div className={styles.intro}>
@@ -168,21 +155,18 @@ function IntroPanel() {
   );
 }
 
-/* ── Detail view ── */
+// Detail view for an archetype
 function ArchetypeDetail({
   archetype,
   radarArch,
-  archRec,
 }: {
   archetype: Archetype;
   radarArch: typeof radarData.archetypes[number] | null;
-  archRec: Record<string, string> | null;
 }) {
   const isSubtype = !!subtypeParents[archetype.id];
 
   return (
     <article className={styles.detail}>
-      {/* Header */}
       <header className={styles.detailHeader}>
         {isSubtype && (
           <span className={styles.subtypeTag}>
@@ -193,10 +177,8 @@ function ArchetypeDetail({
         <p className={styles.detailLead}>{archetype.shortDescription}</p>
       </header>
 
-      {/* Two-column body: left info + right radar */}
       <div className={styles.detailBody}>
         <div className={styles.detailLeft}>
-          {/* Characteristics */}
           <section className={styles.section}>
             <h3 className={styles.sectionTitle}>Características</h3>
             <ul className={styles.charList}>
@@ -209,7 +191,6 @@ function ArchetypeDetail({
             </ul>
           </section>
 
-          {/* Classification criteria */}
           <section className={styles.section}>
             <h3 className={styles.sectionTitle}>Criterios de Clasificación</h3>
             <dl className={styles.dl}>
@@ -221,24 +202,8 @@ function ArchetypeDetail({
               ))}
             </dl>
           </section>
-
-          {/* Architecture recommendations */}
-          {archRec && (
-            <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>Recomendaciones de Arquitectura</h3>
-              <dl className={styles.dl}>
-                {Object.entries(archRec).map(([k, v]) => (
-                  <div key={k} className={styles.dlRow}>
-                    <dt className={styles.dlKey}>{ARCH_REC_LABELS[k] ?? k}</dt>
-                    <dd className={styles.dlVal}>{v}</dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-          )}
         </div>
 
-        {/* Radar chart */}
         {radarArch && (
           <div className={styles.detailRight}>
             <h3 className={styles.sectionTitle}>Perfil Radial</h3>
@@ -249,7 +214,6 @@ function ArchetypeDetail({
         )}
       </div>
 
-      {/* Examples */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Ejemplos Representativos</h3>
         <div className={styles.examples}>
