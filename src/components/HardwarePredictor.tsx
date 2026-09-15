@@ -127,6 +127,11 @@ function ratio(num: number, den: number): number | null {
   return den > 0 ? num / den : null;
 }
 
+// Strips thousand separators (e.g. "8.183.726.797" or "8,183,726,797") so counter values paste cleanly regardless of locale
+function sanitizeCounter(raw: string): string {
+  return raw.trim().replace(/[.,\s]/g, '');
+}
+
 function fmtPct(v: number | null): string {
   if (v === null) return 'N/A';
   return (v * 100).toFixed(2) + '%';
@@ -140,7 +145,7 @@ function fmtNum(v: number | null): string {
 // Scores each archetype and predicts each criteri from the perf  ratios
 function predict(raw: RawCounters): PredictionResult {
   const n = (k: CounterKey) => {
-    const v = parseFloat(raw[k]);
+    const v = parseFloat(sanitizeCounter(raw[k]));
     return isNaN(v) ? 0 : v;
   };
 
@@ -341,9 +346,11 @@ export default function HardwarePredictor() {
       setError('Introduce al menos un valor de contador hardware.');
       return;
     }
-    const invalid = Object.entries(counters).find(
-      ([, v]) => v.trim() !== '' && (isNaN(parseFloat(v)) || parseFloat(v) < 0),
-    );
+    const invalid = Object.entries(counters).find(([, v]) => {
+      if (v.trim() === '') return false;
+      const n = parseFloat(sanitizeCounter(v));
+      return isNaN(n) || n < 0;
+    });
     if (invalid) {
       setError(`Valor no válido en "${invalid[0]}". Introduce un número no negativo.`);
       return;
@@ -379,10 +386,9 @@ export default function HardwarePredictor() {
                 <label key={key} className={styles.field}>
                   <span className={styles.fieldLabel}>{label}</span>
                   <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="e.g. 1234567"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="e.g. 1234567 or 1.234.567"
                     value={counters[key as CounterKey]}
                     onChange={e => handleChange(key as CounterKey, e.target.value)}
                     className={styles.input}
