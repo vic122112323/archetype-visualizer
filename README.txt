@@ -34,6 +34,6 @@ bash
 npm install
 npm run dev
 
-Abre http://localhost:3000 en el navegador.
+Abre http://localhost:3000/archetype-visualizer en el navegador.
 
 O busca https://vic122112323.github.io/archetype-visualizer/ 

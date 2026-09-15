@@ -127,6 +127,15 @@
             "Yasin, A. (2014). A Top-Down Method for Strategy-level Microarchitectural Analysis.",
             "Ferreira, R., et al. Characterizing the Performance of Search Engines and Chess Engines on Modern CPUs."
           ]
+        },
+        {
+          "name": "SpMV (Multiplicación Matriz Dispersa por Vector)",
+          "description": "Multiplicación de una matriz dispersa en formato CSR por un vector denso.",
+          "justification": "El formato CSR guarda solo los elementos no nulos junto con sus índices de columna. Al recorrer una fila, cada elemento no nulo obliga a acceder al vector de entrada en la posición x[col_idx[j]], una dirección que depende de los datos y no sigue ningún patrón predecible. El procesador debe esperar a que cada acceso indirecto se resuelva antes de continuar, lo que genera muchos ciclos de espera por fallos de caché y de TLB. Además, la intensidad aritmética es muy baja (una multiplicación y una suma por cada elemento no nulo cargado), así que el rendimiento queda dominado por la latencia de acceso a memoria, no por el cómputo.",
+          "sources": [
+            "Williams, S., Waterman, A., & Patterson, D. (2009). Roofline: An Insightful Visual Performance Model for Multicore Architectures.",
+            "Vuduc, R., Demmel, J., & Yelick, K. (2002). Performance Optimizations and Bounds for Sparse Matrix-Vector Multiply."
+          ]
         }
       ]
     },

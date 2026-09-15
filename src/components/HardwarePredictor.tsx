@@ -36,6 +36,13 @@ const COUNTER_GROUPS = [
       { key: 'cache-misses',     label: 'cache-misses' },
     ],
   },
+  {
+    label: 'Tiempo',
+    counters: [
+      { key: 'task-clock',       label: 'task-clock (msec)' },
+      { key: 'seconds-elapsed',  label: 'seconds time elapsed' },
+    ],
+  },
 ] as const;
 
 type CounterKey =
@@ -50,7 +57,9 @@ type CounterKey =
   | 'dTLB-load-misses'
   | 'iTLB-loads'
   | 'iTLB-load-misses'
-  | 'cache-misses';
+  | 'cache-misses'
+  | 'task-clock'
+  | 'seconds-elapsed';
 
 type RawCounters = Record<CounterKey, string>;
 
@@ -67,6 +76,8 @@ const EMPTY_COUNTERS: RawCounters = {
   'iTLB-loads':            '',
   'iTLB-load-misses':      '',
   'cache-misses':          '',
+  'task-clock':            '',
+  'seconds-elapsed':       '',
 };
 
 const ARCHETYPE_COLORS: Record<string, string> = {
@@ -103,6 +114,7 @@ interface DerivedMetrics {
   dTLBMissRate:   number | null;
   iTLBMissRate:   number | null;
   instrPerLLCMiss: number | null;
+  cpuUtilization: number | null;
 }
 
 interface ArchetypeScore {
@@ -127,7 +139,6 @@ function ratio(num: number, den: number): number | null {
   return den > 0 ? num / den : null;
 }
 
-// Strips thousand separators (e.g. "8.183.726.797" or "8,183,726,797") so counter values paste cleanly regardless of locale
 function sanitizeCounter(raw: string): string {
   return raw.trim().replace(/[.,\s]/g, '');
 }
@@ -161,6 +172,10 @@ function predict(raw: RawCounters): PredictionResult {
   const iTLBLoads     = n('iTLB-loads');
   const iTLBMisses    = n('iTLB-load-misses');
   const cacheMisses   = n('cache-misses');
+  const taskClockMs   = n('task-clock');
+  const secondsElapsed = n('seconds-elapsed');
+
+  const cpuUtilization = secondsElapsed > 0 ? taskClockMs / (secondsElapsed * 1000) : null;
 
   const llcMissRate    = ratio(llcMisses,   llcLoads);
   const l1dMissRate    = ratio(l1dMisses,   instructions);
@@ -175,7 +190,9 @@ function predict(raw: RawCounters): PredictionResult {
   const l1iMR = l1iMissRate    ?? 0;
   const brMR  = branchMissRate ?? 0;
   const dTMR  = dTLBMissRate   ?? 0;
-  const iTMR  = iTLBMissRate   ?? 0;
+  const llcLoadRate = instructions > 0 ? llcLoads / instructions : 0;
+
+  const isBlockedCompute = brMR < 0.02 && dTMR < 0.02 && llcLoadRate > 0.005 && llcMR < 0.5;
 
   const scores: Record<string, number> = {
     'cpu-intensive':               0,
@@ -207,7 +224,6 @@ function predict(raw: RawCounters): PredictionResult {
     else if (instrPerLLCMiss > 1000)  scores['high-intensity-big-data-compute'] += 2;
   }
   if (llcLoads > 0 && instructions > 0) {
-    const llcLoadRate = llcLoads / instructions;
     if (llcLoadRate > 0.05)           scores['high-intensity-big-data-compute'] += 3;
     else if (llcLoadRate > 0.01)      scores['high-intensity-big-data-compute'] += 1;
   }
@@ -218,9 +234,13 @@ function predict(raw: RawCounters): PredictionResult {
   if (llcMissRate !== null) {
     if (llcMR > 0.05 && llcMR < 0.4) scores['high-intensity-big-data-compute'] += 2;
   }
+  if (isBlockedCompute && llcMR > 0.15) {
+    scores['high-intensity-big-data-compute'] += 5;
+  }
 
   if (llcMissRate !== null) {
-    if (llcMR > 0.3)        scores['memory-intensive'] += 4;
+    if (llcMR > 0.5)        scores['memory-intensive'] += 7;
+    else if (llcMR > 0.3)   scores['memory-intensive'] += 4;
     else if (llcMR > 0.15)  scores['memory-intensive'] += 2;
     else if (llcMR > 0.05)  scores['memory-intensive'] += 1;
   }
@@ -240,9 +260,9 @@ function predict(raw: RawCounters): PredictionResult {
     else if (llcMR > 0.2)   scores['latency-bound'] += 2;
   }
 
-  if (llcMissRate !== null) {
-    if (llcMR > 0.2)        scores['bandwidth-bound'] += 3;
-    else if (llcMR > 0.1)   scores['bandwidth-bound'] += 1;
+  if (llcMissRate !== null && !isBlockedCompute) {
+    if (llcMR > 0.2 && llcMR <= 0.5) scores['bandwidth-bound'] += 3;
+    else if (llcMR > 0.1 && llcMR <= 0.5) scores['bandwidth-bound'] += 1;
   }
   if (dTLBMissRate !== null) {
     if (dTMR < 0.02)        scores['bandwidth-bound'] += 4;
@@ -262,6 +282,11 @@ function predict(raw: RawCounters): PredictionResult {
   if (instructions > 0 && cacheMisses > 0 && cacheMisses / instructions < 0.001) {
     scores['io-bound'] += 2;
   }
+  if (cpuUtilization !== null) {
+    if (cpuUtilization < 0.3)      scores['io-bound'] += 10;
+    else if (cpuUtilization < 0.6) scores['io-bound'] += 6;
+    else if (cpuUtilization < 0.85) scores['io-bound'] += 2;
+  }
 
   // Turn scores into percentages and rank archetypes by score
   const total = Object.values(scores).reduce((a, b) => a + b, 0);
@@ -276,10 +301,12 @@ function predict(raw: RawCounters): PredictionResult {
   let accessPattern: CriterionValue;
   if (dTMR > 0.1 && llcMR > 0.25) {
     accessPattern = { id: 'traversal-punteros', label: 'Pointer Chasing' };
-  } else if (dTMR > 0.05 || llcMR > 0.2) {
-    accessPattern = { id: 'aleatorio', label: 'Aleatorio' };
+  } else if (brMR < 0.02 && dTMR < 0.02 && llcMR > 0.3) {
+    accessPattern = { id: 'por-bloques', label: 'Por Bloques' };
   } else if (brMR < 0.02 && dTMR < 0.02 && llcMR > 0.1) {
     accessPattern = { id: 'streaming', label: 'Streaming' };
+  } else if (dTMR > 0.05 || llcMR > 0.2) {
+    accessPattern = { id: 'aleatorio', label: 'Aleatorio' };
   } else if (brMR < 0.02 && dTMR < 0.02) {
     accessPattern = { id: 'por-bloques', label: 'Por Bloques' };
   } else {
@@ -287,7 +314,9 @@ function predict(raw: RawCounters): PredictionResult {
   }
 
   let workingSet: CriterionValue;
-  if (llcMR > 0.3 || (l1dMR > 0.1 && llcMR > 0.1)) {
+  if (cpuUtilization !== null && cpuUtilization < 0.6) {
+    workingSet = { id: 'grande', label: 'Grande (supera la RAM)' };
+  } else if (llcMR > 0.3 || (l1dMR > 0.1 && llcMR > 0.1)) {
     workingSet = { id: 'grande', label: 'Grande (supera la RAM)' };
   } else if (llcMR > 0.1 || l1dMR > 0.05) {
     workingSet = { id: 'mediano', label: 'Mediano (en RAM)' };
@@ -313,7 +342,7 @@ function predict(raw: RawCounters): PredictionResult {
   }
 
   let parallelization: CriterionValue;
-  if (brMR > 0.08 || iTMR > 0.05 || l1iMR > 0.01) {
+  if (brMR > 0.08 || l1iMR > 0.01) {
     parallelization = { id: 'irregular',    label: 'Paralelismo Irregular' };
   } else if (dTMR < 0.02 && brMR < 0.02) {
     parallelization = { id: 'data-parallel', label: 'Data Parallel'        };
@@ -326,7 +355,7 @@ function predict(raw: RawCounters): PredictionResult {
   return {
     archetypeScores,
     criteriaValues: { accessPattern, workingSet, cacheBehavior, computationalIntensity, parallelization },
-    metrics: { llcMissRate, l1dMissRate, l1iMissRate, branchMissRate, dTLBMissRate, iTLBMissRate, instrPerLLCMiss },
+    metrics: { llcMissRate, l1dMissRate, l1iMissRate, branchMissRate, dTLBMissRate, iTLBMissRate, instrPerLLCMiss, cpuUtilization },
   };
 }
 
@@ -388,7 +417,7 @@ export default function HardwarePredictor() {
                   <input
                     type="text"
                     inputMode="decimal"
-                    placeholder="e.g. 1234567 or 1.234.567"
+                    placeholder="e.g. 1234567 o 1.234.567"
                     value={counters[key as CounterKey]}
                     onChange={e => handleChange(key as CounterKey, e.target.value)}
                     className={styles.input}
@@ -472,6 +501,7 @@ export default function HardwarePredictor() {
               <MetricItem label="dTLB Miss Rate"   value={fmtPct(result.metrics.dTLBMissRate)}   hint="dTLB-load-misses / dTLB-loads" />
               <MetricItem label="iTLB Miss Rate"   value={fmtPct(result.metrics.iTLBMissRate)}   hint="iTLB-load-misses / iTLB-loads" />
               <MetricItem label="Instr / LLC Miss" value={fmtNum(result.metrics.instrPerLLCMiss)} hint="Proxy de intensidad computacional" />
+              <MetricItem label="Utilización de CPU" value={fmtPct(result.metrics.cpuUtilization)} hint="task-clock / seconds elapsed" />
             </div>
           </div>
         </div>
