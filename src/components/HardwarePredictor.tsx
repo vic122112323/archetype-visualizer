@@ -143,6 +143,25 @@ function sanitizeCounter(raw: string): string {
   return raw.trim().replace(/[.,\s]/g, '');
 }
 
+function sanitizeDecimal(raw: string): string {
+  const s = raw.trim().replace(/[^\d.,]/g, '');
+  const lastDot = s.lastIndexOf('.');
+  const lastComma = s.lastIndexOf(',');
+  const dec = Math.max(lastDot, lastComma);
+  if (dec === -1) return s;
+  const sep = s[dec];
+  if (lastDot !== -1 && lastComma !== -1 || s.split(sep).length === 2) {
+    return s.slice(0, dec).replace(/[.,]/g, '') + '.' + s.slice(dec + 1);
+  }
+  return s.replace(/[.,]/g, '');
+}
+
+const DECIMAL_KEYS: ReadonlySet<string> = new Set(['task-clock', 'seconds-elapsed']);
+
+function parseCounter(key: string, raw: string): number {
+  return parseFloat(DECIMAL_KEYS.has(key) ? sanitizeDecimal(raw) : sanitizeCounter(raw));
+}
+
 function fmtPct(v: number | null): string {
   if (v === null) return 'N/A';
   return (v * 100).toFixed(2) + '%';
@@ -156,7 +175,7 @@ function fmtNum(v: number | null): string {
 // Scores each archetype and predicts each criteri from the perf  ratios
 function predict(raw: RawCounters): PredictionResult {
   const n = (k: CounterKey) => {
-    const v = parseFloat(sanitizeCounter(raw[k]));
+    const v = parseCounter(k, raw[k]);
     return isNaN(v) ? 0 : v;
   };
 
@@ -375,9 +394,9 @@ export default function HardwarePredictor() {
       setError('Introduce al menos un valor de contador hardware.');
       return;
     }
-    const invalid = Object.entries(counters).find(([, v]) => {
+    const invalid = Object.entries(counters).find(([k, v]) => {
       if (v.trim() === '') return false;
-      const n = parseFloat(sanitizeCounter(v));
+      const n = parseCounter(k, v);
       return isNaN(n) || n < 0;
     });
     if (invalid) {

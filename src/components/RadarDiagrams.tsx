@@ -4,6 +4,7 @@ import radarData from '../data/radar.json';
 import RadarChart from './RadarChart';
 import CombinedRadarChart from './CombinedRadarChart';
 import ScaleExplanation from './ScaleExplanation';
+import ReferenceRadar from './ReferenceRadar';
 import styles from './RadarDiagrams.module.css';
 
 type RawArch = typeof radarData.archetypes[number];
@@ -24,6 +25,8 @@ export default function RadarDiagrams() {
   return (
     <div className={styles.root}>
       <ScaleExplanation />
+
+      <ReferenceRadar axes={radarData.axes} />
 
       <CombinedRadarChart archetypes={radarData.archetypes} axes={radarData.axes} />
 
