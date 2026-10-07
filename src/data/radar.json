@@ -94,7 +94,7 @@
       "color": "#c0304a",
       "parentId": "memory-intensive",
       "values": {
-        "working_set": 0,
+        "working_set": 50,
         "cache_impact": 100,
         "memory_patterns": 50,
         "parallelism": 75,

@@ -80,6 +80,23 @@ const EMPTY_COUNTERS: RawCounters = {
   'seconds-elapsed':       '',
 };
 
+// Valores de perf stat de un análisis I/O de ejemplo
+const IO_ANALYSIS_COUNTERS: RawCounters = {
+  ...EMPTY_COUNTERS,
+  'instructions':          '11.670.606.853',
+  'L1-dcache-load-misses': '407.592.075',
+  'L1-icache-load-misses': '550.361.952',
+  'LLC-loads':             '213.495.351',
+  'LLC-load-misses':       '12.090.711',
+  'branch-misses':         '81.462.875',
+  'branches':              '2.280.436.947',
+  'dTLB-loads':            '2.963.911.247',
+  'dTLB-load-misses':      '20.575.741',
+  'iTLB-loads':            '21.888.395',
+  'task-clock':            '11.429,28',
+  'seconds-elapsed':       '30,091128445',
+};
+
 const ARCHETYPE_COLORS: Record<string, string> = {
   'cpu-intensive':              '#3b82f6',
   'high-intensity-big-data-compute': '#0ea5e9',
@@ -407,6 +424,12 @@ export default function HardwarePredictor() {
     setResult(predict(counters));
   }
 
+  function handleLoadIO() {
+    setCounters(IO_ANALYSIS_COUNTERS);
+    setResult(null);
+    setError('');
+  }
+
   function handleReset() {
     setCounters(EMPTY_COUNTERS);
     setResult(null);
@@ -452,6 +475,9 @@ export default function HardwarePredictor() {
         <div className={styles.actions}>
           <button onClick={handlePredict} className={styles.btnPrimary}>
             Predecir Arquetipo
+          </button>
+          <button onClick={handleLoadIO} className={styles.btnSecondary}>
+            Análisis I/O
           </button>
           <button onClick={handleReset} className={styles.btnSecondary}>
             Limpiar
